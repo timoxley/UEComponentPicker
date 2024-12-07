@@ -23,5 +23,5 @@ public:
         Category="Component Picker")
     static COMPONENTPICKER_API UActorComponent* GetPickedComponent(
         const FActorComponentPicker& Target,
-        const TSubclassOf<UActorComponent>& ComponentClass);
+        const TSubclassOf<UActorComponent> ComponentClass);
 };

@@ -4,7 +4,7 @@
 
 UActorComponent* UComponentPickerFunctionLibrary::GetPickedComponent(
     const FActorComponentPicker& Target,
-    const TSubclassOf<UActorComponent>& ComponentClass)
+    const TSubclassOf<UActorComponent> ComponentClass)
 {
     (void) ComponentClass;
     return Target.Component;
