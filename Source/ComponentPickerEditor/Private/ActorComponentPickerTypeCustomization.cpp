@@ -132,7 +132,7 @@ UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentValueComp
 
 FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
 {
-    const UActorComponent* Component = ExtractCurrentValueComponent(PropHandle);
+    const UActorComponent* Component = ExtractCurrentValueComponent(ComponentPropHandle);
     return Component ? FText::FromName(Component->GetFName()) : FText::FromString("None");
 }
 
