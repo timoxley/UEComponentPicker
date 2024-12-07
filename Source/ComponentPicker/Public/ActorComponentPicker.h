@@ -14,6 +14,12 @@ struct COMPONENTPICKER_API FActorComponentPicker
 {
 	GENERATED_BODY()
     
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(NoEditInline))
+    UPROPERTY(EditAnywhere, meta=(NoEditInline), Category=ComponentPicker)
     UActorComponent* Component = nullptr;
+
+    template<typename TComponentClass>
+    TComponentClass* Get()
+    {
+        return Cast<TComponentClass*>(Component);
+    }
 };
