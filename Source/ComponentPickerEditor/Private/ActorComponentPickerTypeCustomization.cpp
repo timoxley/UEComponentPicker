@@ -214,6 +214,23 @@ AActor* FActorComponentPickerTypeCustomization::FetchActorCDOForProperty(
             if (const auto Actor = Cast<AActor>(Outer))
                 return Actor;
 
+            for (UObject* EditedAsset : GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->GetAllEditedAssets())
+            {
+                if (const UBlueprint* EditedBlueprintAsset = Cast<UBlueprint>(EditedAsset))
+                {
+                    if (EditedBlueprintAsset->GeneratedClass == Outer)
+                    {
+                        if (UObject* CDO = Cast<UClass>(Outer)->ClassDefaultObject)
+                        {
+                            if (AActor* ActorCDO = Cast<AActor>(CDO))
+                            {
+                                return ActorCDO;
+                            }
+                        }
+                    }
+                }
+            }
+
             NextOuter = Outer->GetOuter();
         }
         while (Outer != NextOuter);
