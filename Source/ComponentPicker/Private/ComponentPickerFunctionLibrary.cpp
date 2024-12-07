@@ -7,5 +7,5 @@ UActorComponent* UComponentPickerFunctionLibrary::GetPickedComponent(
     const TSubclassOf<UActorComponent> ComponentClass)
 {
     (void) ComponentClass;
-    return Target.Component;
+    return Target.Get();
 }

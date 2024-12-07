@@ -64,12 +64,14 @@ protected:
 private:
     FBlueprintEditor* Editor = nullptr;
     
+    TSharedPtr<SBox> AllowedClassBox;
     TSharedPtr<SComboButton> ComponentListComboButton;
     TSharedPtr<SListView<TWeakObjectPtr<UActorComponent>>> ComponentListView;
     TSharedPtr<SSearchBox> SearchBox;
     TSharedPtr<SSubobjectEditor> SubobjectEditor;
 
     TSharedPtr<IPropertyHandle> PropHandle;
+    TSharedPtr<IPropertyHandle> AllowedClassPropHandle;
     TSharedPtr<IPropertyHandle> ComponentPropHandle;
     
     TArray<TWeakObjectPtr<UActorComponent>> ReferenceableComponents;

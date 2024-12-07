@@ -19,14 +19,31 @@ struct COMPONENTPICKER_API FActorComponentPicker
 {
 	GENERATED_BODY()
 
+public:
+	/** Get the currently selected component pre-casted. */
+	template<typename TComponentClass>
+	TComponentClass* Get() const
+	{
+		return Cast<TComponentClass*>(Component);
+	}
+
+	/** Get the currently selected component. */
+	FORCEINLINE UActorComponent* Get() const
+	{
+		return Component;
+	}
+
+	FORCEINLINE void SetAllowedClass(const TSubclassOf<UActorComponent>& NewAllowedClass)
+	{
+		AllowedClass = NewAllowedClass;
+	}
+
+protected:
+	/** Allowed component class. */
+	UPROPERTY(EditDefaultsOnly, Category=ComponentPicker)
+	TSubclassOf<UActorComponent> AllowedClass = UActorComponent::StaticClass();
+	
     /** The currently selected component. */
     UPROPERTY(EditAnywhere, meta=(NoEditInline), Category=ComponentPicker)
     UActorComponent* Component = nullptr;
-
-    /** Get the currently selected component pre-casted. */
-    template<typename TComponentClass>
-    TComponentClass* Get()
-    {
-        return Cast<TComponentClass*>(Component);
-    }
 };

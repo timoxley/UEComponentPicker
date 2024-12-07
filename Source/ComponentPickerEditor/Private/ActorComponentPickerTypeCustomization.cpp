@@ -6,6 +6,7 @@
 #include "ActorComponentPicker.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
+#include "IDetailChildrenBuilder.h"
 #include "PublicPropertyEditorButton.h"
 #include "SSubobjectBlueprintEditor.h"
 #include "SSubobjectEditor.h"
@@ -19,9 +20,11 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
      IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
     PropHandle = PropertyHandle;
-    ComponentPropHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FActorComponentPicker, Component));
+    ComponentPropHandle = PropertyHandle->GetChildHandle("Component");
+    AllowedClassPropHandle = PropertyHandle->GetChildHandle("AllowedClass");
 
-    if (Editor = FetchBlueprintEditor(PropertyHandle); !Editor) // editor is unavailable
+    Editor = FetchBlueprintEditor(PropertyHandle);
+    if (!Editor) // within some non-blueprint actor toolkit
     {
         HeaderRow
         .NameContent()
@@ -29,14 +32,11 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
              PropertyHandle->CreatePropertyNameWidget()
         ]
         .ValueContent()
-        .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
         [
-            SNew(STextBlock)
-            .Text(LOCTEXT("ActorComponentPickerUnavailableDueToNoEditor", "Component picker unavailable outside of blueprints!"))
-            .Font(IDetailLayoutBuilder::GetDetailFont())
+            AllowedClassPropHandle->CreatePropertyValueWidget()
         ];
     }
-    else // editor is available
+    else // within blueprint actor toolkit
     {
         HeaderRow
         .NameContent()
