@@ -3,7 +3,7 @@
 
 #include "ActorComponentPickerTypeCustomization.h"
 
-#include "ComponentClassFilter.h"
+#include "ComponentPickerSCSEditorUICustomization.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
 #include "PublicPropertyEditorButton.h"
@@ -12,10 +12,6 @@
 #include "Toolkits/ToolkitManager.h"
 
 #define LOCTEXT_NAMESPACE "FComponentPickerTypeCustomization"
-
-FActorComponentPickerTypeCustomization::FActorComponentPickerTypeCustomization()
-    : AllowedClassFromPropertyFilter(MakeShareable(new FComponentClassFilter))
-{}
 
 void FActorComponentPickerTypeCustomization::CustomizeHeader(
     TSharedRef<IPropertyHandle> PropertyHandle,
@@ -111,11 +107,12 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
         .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext)
         .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
         .AllowEditing(false)
-        .HideComponentClassCombo(true)
+        .HideComponentClassCombo(false)
         .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::HandleSelectionUpdated)
-        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked)
-        .SubobjectClassListFilters(ClassFilters);
+        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked);
 
+    SubobjectEditor->SetUICustomization(FComponentPickerSCSEditorUICustomization::GetInstance());
+    
     constexpr float MinPopupWidth = 250.0f;
     constexpr float MinPopupHeight = 200.0f;
 
@@ -132,22 +129,9 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
         ];
 }
 
-void FActorComponentPickerTypeCustomization::RebuildClassFilters()
+void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
 {
-    if (BlueprintToolkit == nullptr)
-        return;
-
-    ClassFilters.Empty();
-
-    // add class filter from blueprint toolkit
-    if (BlueprintToolkit->GetImportedClassViewerFilter().IsValid())
-    {
-        ClassFilters.Add(BlueprintToolkit->GetImportedClassViewerFilter().ToSharedRef());
-    }
-
-    // add class filter from allowed class property
-    AllowedClassFromPropertyFilter->AllowedParentClasses = { ExtractAllowedComponentClass(AllowedClassPropHandle) };
-    ClassFilters.Add(AllowedClassFromPropertyFilter);
+    FComponentPickerSCSEditorUICustomization::GetInstance()->SetComponentTypeFilter(ExtractAllowedComponentClass(AllowedClassPropHandle));
 }
 
 FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
@@ -170,14 +154,14 @@ void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(SelectedNodes[0]);
     SetComponent(EditableComponent);
-
-    ComponentListComboButton->SetIsOpen(false);
 }
 
 void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(Node);
     SetComponent(EditableComponent);
+
+    ComponentListComboButton->SetIsOpen(false);
 }
 
 UClass* FActorComponentPickerTypeCustomization::ExtractAllowedComponentClass(

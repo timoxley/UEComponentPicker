@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "BlueprintEditor.h"
-#include "ComponentClassFilter.h"
 #include "SSubobjectEditor.h"
 
 /**
@@ -13,8 +12,6 @@
 class FActorComponentPickerTypeCustomization final : public IPropertyTypeCustomization
 {
 public:
-    FActorComponentPickerTypeCustomization();
-    
     /** Makes a new instance of this detail layout class for a specific detail view requesting it. */
     static TSharedRef<IPropertyTypeCustomization> MakeInstance()
     {
@@ -48,7 +45,7 @@ protected:
     TSharedRef<SWidget> BuildPopupContent();
 
     /** Fill the @ClassFilters array. */
-    void RebuildClassFilters();
+    void RebuildClassFilters() const;
 
     //////////////////////////////
     /// BP component tree view delegate handlers
@@ -79,10 +76,6 @@ protected:
 private:
     // owning toolkit editor
     FBlueprintEditor* BlueprintToolkit = nullptr;
-
-    // component picker filters
-    TArray<TSharedRef<IClassViewerFilter>> ClassFilters;
-    TSharedRef<FComponentClassFilter> AllowedClassFromPropertyFilter;
 
     // widgets
     TSharedPtr<SBox> AllowedClassBox;
