@@ -112,19 +112,24 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
         .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked);
 
     SubobjectEditor->SetUICustomization(FComponentPickerSCSEditorUICustomization::GetInstance());
-    
+
     constexpr float MinPopupWidth = 250.0f;
     constexpr float MinPopupHeight = 200.0f;
 
     return SNew(SBorder)
-        .BorderImage(FAppStyle::Get().GetBrush("Brushes.Recessed"))
-        .Padding(4.0f)
+        .BorderImage(FAppStyle::Get().GetBrush("Brushes.Secondary"))
+        .Padding(2.f, 6.f)
         [
-            SNew(SBox)
-            .MinDesiredWidth(MinPopupWidth)
-            .MinDesiredHeight(MinPopupHeight)
+            SNew(SBorder)
+            .BorderImage(FAppStyle::Get().GetBrush("Brushes.Recessed"))
+            .Padding(4.0f)
             [
-                SubobjectEditor.ToSharedRef()
+                SNew(SBox)
+                .MinDesiredWidth(MinPopupWidth)
+                .MinDesiredHeight(MinPopupHeight)
+                [
+                    SubobjectEditor.ToSharedRef()
+                ]
             ]
         ];
 }
