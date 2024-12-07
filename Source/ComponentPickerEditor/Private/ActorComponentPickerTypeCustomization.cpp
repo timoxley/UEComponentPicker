@@ -64,7 +64,7 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
                 .Image(FAppStyle::GetBrush("Icons.X"))
                 .OnClickAction(FSimpleDelegate::CreateLambda([this]
                 {
-                    SetComponent(nullptr);
+                    TrySetComponent(nullptr);
                 }))
                 .IsFocusable(false)
             ]
@@ -153,13 +153,15 @@ AActor* FActorComponentPickerTypeCustomization::HandleGetPreviewActor() const
 void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(SelectedNodes[0]);
-    SetComponent(EditableComponent);
+    TrySetComponent(EditableComponent);
+
+    ComponentListComboButton->SetIsOpen(false);
 }
 
 void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(Node);
-    SetComponent(EditableComponent);
+    TrySetComponent(EditableComponent);
 
     ComponentListComboButton->SetIsOpen(false);
 }
@@ -204,8 +206,14 @@ UActorComponent* FActorComponentPickerTypeCustomization::ExtractComponentFromSub
    return const_cast<UActorComponent*>(TmpComponent);
 }
 
-void FActorComponentPickerTypeCustomization::SetComponent(UActorComponent* Component) const
+void FActorComponentPickerTypeCustomization::TrySetComponent(UActorComponent* Component) const
 {
+    const UClass* AllowedClass = ExtractAllowedComponentClass(AllowedClassPropHandle);
+    if (Component != nullptr && AllowedClass != nullptr)
+    {
+        if (!Component->IsA(AllowedClass)) return;
+    }
+    
     AActor* ActorCDO = FetchActorCDOForProperty(PropHandle);
     if (!ActorCDO)
         return;

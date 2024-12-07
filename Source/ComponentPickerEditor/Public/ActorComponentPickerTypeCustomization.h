@@ -33,7 +33,7 @@ public:
     
 protected:
     /** Set the component selected by the picker. */
-    void SetComponent(UActorComponent* Component) const;
+    void TrySetComponent(UActorComponent* Component) const;
 
     //////////////////////////////
     /// Widget Builders
