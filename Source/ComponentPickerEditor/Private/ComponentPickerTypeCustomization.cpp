@@ -1,6 +1,6 @@
 ﻿// Copyright 2024 Gregor Sönnichsen. All Rights Reserved.
 
-#include "ActorComponentPickerTypeCustomization.h"
+#include "ComponentPickerTypeCustomization.h"
 
 #include "ComponentPickerSCSEditorUICustomization.h"
 #include "DetailLayoutBuilder.h"
@@ -14,7 +14,7 @@
 
 #define LOCTEXT_NAMESPACE "FComponentPickerTypeCustomization"
 
-void FActorComponentPickerTypeCustomization::CustomizeHeader(
+void FComponentPickerTypeCustomization::CustomizeHeader(
     TSharedRef<IPropertyHandle> PropertyHandle,
      FDetailWidgetRow& HeaderRow,
      IPropertyTypeCustomizationUtils& CustomizationUtils)
@@ -37,7 +37,7 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
     ];
 }
 
-void FActorComponentPickerTypeCustomization::CustomizeChildren(
+void FComponentPickerTypeCustomization::CustomizeChildren(
     TSharedRef<IPropertyHandle> PropertyHandle,
    IDetailChildrenBuilder& ChildBuilder,
    IPropertyTypeCustomizationUtils& CustomizationUtils)
@@ -45,17 +45,17 @@ void FActorComponentPickerTypeCustomization::CustomizeChildren(
     // no action needed here, but override is required
 }
 
-TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
+TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildPopupContent()
 {
     RebuildClassFilters();
     
     SubobjectEditor = SAssignNew(SubobjectEditor, SSubobjectBlueprintEditor)
-        .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext)
-        .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
+        .ObjectContext(this, &FComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext)
+        .PreviewActor(this, &FComponentPickerTypeCustomization::HandleGetPreviewActor)
         .AllowEditing(false)
         .HideComponentClassCombo(false)
-        .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::HandleSelectionUpdated)
-        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked);
+        .OnSelectionUpdated(this, &FComponentPickerTypeCustomization::HandleSelectionUpdated)
+        .OnItemDoubleClicked(this, &FComponentPickerTypeCustomization::HandleComponentDoubleClicked);
 
     SubobjectEditor->SetUICustomization(FComponentPickerSCSEditorUICustomization::GetInstance());
 
@@ -80,7 +80,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
         ];
 }
 
-void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
+void FComponentPickerTypeCustomization::RebuildClassFilters() const
 {
     FComponentPickerSCSEditorUICustomization::GetInstance()
         ->SetComponentTypeFilter
@@ -89,7 +89,7 @@ void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
         );
 }
 
-FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
+FText FComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
 {
     const UActorComponent* ComponentTemplate = ExtractCurrentlyPickedComponent(ComponentPropHandle);
     if (!ComponentTemplate)
@@ -117,13 +117,13 @@ FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() co
     return FText::FromString(ComponentTemplate->GetName());
 }
 
-const FSlateBrush* FActorComponentPickerTypeCustomization::HandleGetCurrentComponentIcon() const
+const FSlateBrush* FComponentPickerTypeCustomization::HandleGetCurrentComponentIcon() const
 {
     const UActorComponent* ComponentTemplate = ExtractCurrentlyPickedComponent(ComponentPropHandle);
     return !ComponentTemplate ? nullptr : FSlateIconFinder::FindIconBrushForClass(ComponentTemplate->GetClass(), TEXT("SCS.Component"));
 }
 
-TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker()
+TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildComponentPicker()
 {
     return SNew(SVerticalBox)
         // component picker
@@ -140,7 +140,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
                 SAssignNew(ComponentListComboButton, SComboButton)
                 .ButtonStyle(FAppStyle::Get(), "PropertyEditor.AssetComboStyle")
                 .ForegroundColor(FAppStyle::GetColor("PropertyEditor.AssetName.ColorAndOpacity"))
-                .OnGetMenuContent(this, &FActorComponentPickerTypeCustomization::BuildPopupContent)
+                .OnGetMenuContent(this, &FComponentPickerTypeCustomization::BuildPopupContent)
                 .ContentPadding(FMargin(3.0f, 3.0f, 2.0f, 1.0f))
                 .ButtonContent()
                 [
@@ -151,7 +151,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
             .AutoWidth()
             [
                 SNew(SPublicPropertyEditorButton)
-                .Text(LOCTEXT("ActorComponentPickerClearButtonText", "Clear"))
+                .Text(LOCTEXT("ComponentPickerClearButtonText", "Clear"))
                 .Image(FAppStyle::GetBrush("Icons.X"))
                 .OnClickAction(FSimpleDelegate::CreateLambda([this]
                 {
@@ -181,7 +181,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
         ];
 }
 
-TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPickerLabel()
+TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildComponentPickerLabel()
 {
     return SNew(SHorizontalBox)
         + SHorizontalBox::Slot()
@@ -194,7 +194,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
         .AutoWidth()
         [
             SNew(SImage)
-            .Image(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentIcon)
+            .Image(this, &FComponentPickerTypeCustomization::HandleGetCurrentComponentIcon)
         ]
         + SHorizontalBox::Slot()
         .AutoWidth()
@@ -207,7 +207,7 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
         .VAlign(VAlign_Center)
         [
             SNew(STextBlock)
-            .Text(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName)
+            .Text(this, &FComponentPickerTypeCustomization::HandleGetCurrentComponentName)
             .Font(IDetailLayoutBuilder::GetDetailFont())
         ]
         + SHorizontalBox::Slot()
@@ -218,17 +218,17 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker
         ];
 }
 
-UObject* FActorComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext() const
+UObject* FComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext() const
 {
     return BlueprintToolkit->GetSubobjectEditorObjectContext();
 }
 
-AActor* FActorComponentPickerTypeCustomization::HandleGetPreviewActor() const
+AActor* FComponentPickerTypeCustomization::HandleGetPreviewActor() const
 {
     return BlueprintToolkit->GetPreviewActor();
 }
 
-void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
+void FComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(SelectedNodes[0]);
     TrySetComponent(EditableComponent);
@@ -236,7 +236,7 @@ void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray
     ComponentListComboButton->SetIsOpen(false);
 }
 
-void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
+void FComponentPickerTypeCustomization::HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(Node);
     TrySetComponent(EditableComponent);
@@ -244,7 +244,7 @@ void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TShare
     ComponentListComboButton->SetIsOpen(false);
 }
 
-UClass* FActorComponentPickerTypeCustomization::ExtractAllowedComponentClass(
+UClass* FComponentPickerTypeCustomization::ExtractAllowedComponentClass(
     const TSharedPtr<IPropertyHandle>& PropHandle)
 {
     switch (UObject* Value; PropHandle->GetValue(Value))
@@ -256,7 +256,7 @@ UClass* FActorComponentPickerTypeCustomization::ExtractAllowedComponentClass(
     }
 }
 
-UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentlyPickedComponent(const TSharedPtr<IPropertyHandle>& PropHandle)
+UActorComponent* FComponentPickerTypeCustomization::ExtractCurrentlyPickedComponent(const TSharedPtr<IPropertyHandle>& PropHandle)
 {
     switch (UObject* Value; PropHandle->GetValue(Value))
     {
@@ -267,7 +267,7 @@ UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentlyPickedC
     }
 }
 
-UActorComponent* FActorComponentPickerTypeCustomization::ExtractComponentFromSubobjectNode(
+UActorComponent* FComponentPickerTypeCustomization::ExtractComponentFromSubobjectNode(
     const FSubobjectEditorTreeNodePtrType& SubobjectNodePtr)
 {
     if (!SubobjectNodePtr)
@@ -284,7 +284,7 @@ UActorComponent* FActorComponentPickerTypeCustomization::ExtractComponentFromSub
    return const_cast<UActorComponent*>(TmpComponent);
 }
 
-void FActorComponentPickerTypeCustomization::TrySetComponent(UActorComponent* Component) const
+void FComponentPickerTypeCustomization::TrySetComponent(UActorComponent* Component) const
 {
     const UClass* AllowedClass = ExtractAllowedComponentClass(AllowedClassPropHandle);
     if (Component != nullptr && AllowedClass != nullptr)
@@ -298,7 +298,7 @@ void FActorComponentPickerTypeCustomization::TrySetComponent(UActorComponent* Co
 
     // Actual transaction starts here
     const FScopedTransaction Transaction(FText::Format(
-        LOCTEXT("SetActorComponentPickerComponentProperty", "Set {0}"),
+        LOCTEXT("SetComponentPickerComponentProperty", "Set {0}"),
         ComponentPropHandle->GetPropertyDisplayName()));
 
     ActorCDO->SetFlags(RF_Transactional);
@@ -307,7 +307,7 @@ void FActorComponentPickerTypeCustomization::TrySetComponent(UActorComponent* Co
     ComponentPropHandle->SetValue(Component);
 }
 
-AActor* FActorComponentPickerTypeCustomization::FetchActorCDOForProperty(
+AActor* FComponentPickerTypeCustomization::FetchActorCDOForProperty(
     const TSharedPtr<IPropertyHandle>& PropertyHandle)
 {
     TArray<UObject*> ObjectArray;
@@ -351,7 +351,7 @@ AActor* FActorComponentPickerTypeCustomization::FetchActorCDOForProperty(
     return nullptr;
 }
 
-FBlueprintEditor* FActorComponentPickerTypeCustomization::FetchBlueprintEditor(
+FBlueprintEditor* FComponentPickerTypeCustomization::FetchBlueprintEditor(
     const TSharedPtr<IPropertyHandle>& PropertyHandle)
 {
     const AActor* EditedActor = FetchActorCDOForProperty(PropertyHandle);

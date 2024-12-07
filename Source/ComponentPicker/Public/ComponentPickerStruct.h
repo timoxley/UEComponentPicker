@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "ActorComponentPicker.generated.h"
+#include "ComponentPickerStruct.generated.h"
 
 /**
  * Allows picking a component via a drop-down menu at editor-time
@@ -15,7 +15,7 @@
  * method that has to be manually called to inject the dependency.
  */
 USTRUCT(BlueprintType)
-struct COMPONENTPICKER_API FActorComponentPicker
+struct COMPONENTPICKER_API FComponentPicker
 {
 	GENERATED_BODY()
 

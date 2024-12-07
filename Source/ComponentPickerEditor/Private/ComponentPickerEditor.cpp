@@ -2,15 +2,15 @@
 
 #include "ComponentPickerEditor.h"
 
-#include "ActorComponentPickerTypeCustomization.h"
+#include "ComponentPickerTypeCustomization.h"
 
 void FComponentPickerEditorModule::StartupModule()
 {
     FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
     PropertyModule.RegisterCustomPropertyTypeLayout
     (
-        TEXT("ActorComponentPicker"),
-        FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FActorComponentPickerTypeCustomization::MakeInstance)
+        TEXT("ComponentPicker"),
+        FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FComponentPickerTypeCustomization::MakeInstance)
     );
 }
 
@@ -19,7 +19,7 @@ void FComponentPickerEditorModule::ShutdownModule()
     if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
     {
         FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-        PropertyModule.UnregisterCustomPropertyTypeLayout(TEXT("ActorComponentPicker"));
+        PropertyModule.UnregisterCustomPropertyTypeLayout(TEXT("ComponentPicker"));
     }
 }
     

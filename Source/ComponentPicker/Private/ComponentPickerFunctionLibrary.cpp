@@ -3,7 +3,7 @@
 #include "ComponentPickerFunctionLibrary.h"
 
 UActorComponent* UComponentPickerFunctionLibrary::GetPickedComponent(
-    const FActorComponentPicker& Target,
+    const FComponentPicker& Target,
     const TSubclassOf<UActorComponent> ComponentClass)
 {
     (void) ComponentClass;

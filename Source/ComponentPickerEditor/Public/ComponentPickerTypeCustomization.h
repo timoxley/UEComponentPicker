@@ -7,15 +7,15 @@
 #include "SSubobjectEditor.h"
 
 /**
- * Editor property customization for @FActorComponentPicker.
+ * Editor property customization for @FComponentPicker.
  */
-class FActorComponentPickerTypeCustomization final : public IPropertyTypeCustomization
+class FComponentPickerTypeCustomization final : public IPropertyTypeCustomization
 {
 public:
     /** Makes a new instance of this detail layout class for a specific detail view requesting it. */
     static TSharedRef<IPropertyTypeCustomization> MakeInstance()
     {
-        return MakeShareable(new FActorComponentPickerTypeCustomization());
+        return MakeShareable(new FComponentPickerTypeCustomization());
     }
 
     // - IPropertyTypeCustomization
