@@ -1,8 +1,8 @@
-﻿#include "ComponentPickerEditor.h"
+﻿// Copyright 2024 Gregor Sönnichsen. All Rights Reserved.
+
+#include "ComponentPickerEditor.h"
 
 #include "ActorComponentPickerTypeCustomization.h"
-
-#define LOCTEXT_NAMESPACE "FComponentPickerEditorModule"
 
 void FComponentPickerEditorModule::StartupModule()
 {
@@ -22,7 +22,5 @@ void FComponentPickerEditorModule::ShutdownModule()
         PropertyModule.UnregisterCustomPropertyTypeLayout(TEXT("ActorComponentPicker"));
     }
 }
-
-#undef LOCTEXT_NAMESPACE
     
 IMPLEMENT_MODULE(FComponentPickerEditorModule, ComponentPickerEditor)

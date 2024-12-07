@@ -8,7 +8,8 @@ class FComponentPickerModule : public IModuleInterface
 {
 public:
 
-	/** IModuleInterface implementation */
+	// - IModuleInterface
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	// --
 };

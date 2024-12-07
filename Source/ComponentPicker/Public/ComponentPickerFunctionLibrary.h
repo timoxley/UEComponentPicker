@@ -8,7 +8,7 @@
 #include "ComponentPickerFunctionLibrary.generated.h"
 
 /**
- * 
+ * Utility methods for @FActorComponentPicker.
  */
 UCLASS(meta=(BlueprintThreadSafe, ScriptName = "ComponentPickerLibrary"), MinimalAPI)
 class UComponentPickerFunctionLibrary : public UBlueprintFunctionLibrary
@@ -16,10 +16,10 @@ class UComponentPickerFunctionLibrary : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintPure,
-        meta=(DisplayName="Get (Component Picker)",
-            ScriptMethod="GetPickedComponent",
-            DeterminesOutputType="ComponentClass"),
+    /** Get the component selected in a @FActorComponentPicker. */
+    UFUNCTION(
+        BlueprintPure,
+        meta=(DisplayName="Get (Component Picker)", ScriptMethod="GetPickedComponent", DeterminesOutputType="ComponentClass"),
         Category="Component Picker")
     static COMPONENTPICKER_API UActorComponent* GetPickedComponent(
         const FActorComponentPicker& Target,

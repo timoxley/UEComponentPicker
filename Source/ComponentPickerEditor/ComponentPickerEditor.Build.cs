@@ -1,13 +1,15 @@
-﻿using UnrealBuildTool;
+﻿// Copyright 2024 Gregor Sönnichsen. All Rights Reserved.
+
+using UnrealBuildTool;
 
 public class ComponentPickerEditor : ModuleRules
 {
-    public ComponentPickerEditor(ReadOnlyTargetRules Target) : base(Target)
+    public ComponentPickerEditor(ReadOnlyTargetRules target) : base(target)
     {
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
-            new string[]
+            new[]
             {
                 "Core", 
                 "Kismet",
@@ -22,7 +24,7 @@ public class ComponentPickerEditor : ModuleRules
         );
 
         PrivateDependencyModuleNames.AddRange(
-            new string[]
+            new[]
             {
                 "CoreUObject",
                 "Engine",

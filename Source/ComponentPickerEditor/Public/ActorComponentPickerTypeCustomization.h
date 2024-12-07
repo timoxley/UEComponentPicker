@@ -6,21 +6,17 @@
 #include "BlueprintEditor.h"
 #include "SSubobjectEditor.h"
 
-
 /**
- * 
+ * Editor property customization for @FActorComponentPicker.
  */
-class FActorComponentPickerTypeCustomization : public IPropertyTypeCustomization
+class FActorComponentPickerTypeCustomization final : public IPropertyTypeCustomization
 {
 public:
-    /** Makes a new instance of this detail layout class for a specific detail view requesting it */
+    /** Makes a new instance of this detail layout class for a specific detail view requesting it. */
     static TSharedRef<IPropertyTypeCustomization> MakeInstance()
     {
         return MakeShareable(new FActorComponentPickerTypeCustomization());
     }
-    
-    FActorComponentPickerTypeCustomization()
-    {}
 
     // - IPropertyTypeCustomization
     virtual void CustomizeHeader(
@@ -35,28 +31,39 @@ public:
     ) override;
     // --
     
-private:
-    void SetComponent(AActor* OwnerActorCDO, UActorComponent* Component) const;
+protected:
+    /** Set the component selected by the picker. */
+    void SetComponent(UActorComponent* Component) const;
 
-    TSharedRef<SWidget> GetPopupContent();
+    /** Build the content of the component selector pop-up. */
+    TSharedRef<SWidget> BuildPopupContent();
 
-    UActorComponent* GetCurrentValueComponent() const;
-    FText GetCurrentValueComponentName() const;
+    /** Get the to be displayed name of the selected component. */
+    FText HandleGetCurrentComponentName() const;
 
-    // ---- Subobject Editor Delegates
-    UObject* GetSubobjectEditorObjectContext() const;
-    AActor* GetPreviewActor() const;
-    void OnSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes);
-    void OnComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node);
-    // ----
+    // ----------------------------------------------
+    // BP component tree view delegate handlers
+    UObject* HandleGetSubobjectEditorObjectContext() const;
+    AActor* HandleGetPreviewActor() const;
+    void HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes);
+    void HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node);
+    // ----------------------------------------------
+    
+    /** Tries to extract a component value from the given property handle. */
+    static UActorComponent* ExtractCurrentValueComponent(const TSharedPtr<IPropertyHandle>& PropHandle);
 
-    static UActorComponent* GetComponentFromSubobjectNode(const FSubobjectEditorTreeNodePtrType& SubobjectNodePtr);
+    /** Tries to extract the component CDO from the subobject editor node. */
+    static UActorComponent* ExtractComponentFromSubobjectNode(const FSubobjectEditorTreeNodePtrType& SubobjectNodePtr);
 
+    /** Walks up the outer chain and fetches the first actor object, if any. */
     static AActor* FetchActorCDOForProperty(const TSharedPtr<IPropertyHandle>& PropertyHandle);
+    
+    /** Uses the toolkit manager to try and find the blueprint editor with which the actor CDO to the property is edited. */
     static FBlueprintEditor* FetchBlueprintEditor(const TSharedPtr<IPropertyHandle>& PropertyHandle);
 
 private:
-    FBlueprintEditor* Editor;
+    FBlueprintEditor* Editor = nullptr;
+    
     TSharedPtr<SComboButton> ComponentListComboButton;
     TSharedPtr<SListView<TWeakObjectPtr<UActorComponent>>> ComponentListView;
     TSharedPtr<SSearchBox> SearchBox;

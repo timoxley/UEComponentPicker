@@ -6,9 +6,12 @@
 #include "ActorComponentPicker.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
+#include "PublicPropertyEditorButton.h"
 #include "SSubobjectBlueprintEditor.h"
 #include "SSubobjectEditor.h"
 #include "Toolkits/ToolkitManager.h"
+
+#define LOCTEXT_NAMESPACE "FComponentPickerTypeCustomization"
 
 void FActorComponentPickerTypeCustomization::CustomizeHeader(
     TSharedRef<IPropertyHandle> PropertyHandle,
@@ -18,22 +21,22 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
     PropHandle = PropertyHandle;
     ComponentPropHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FActorComponentPicker, Component));
 
-    if (Editor = FetchBlueprintEditor(PropertyHandle); !Editor)
+    if (Editor = FetchBlueprintEditor(PropertyHandle); !Editor) // editor is unavailable
     {
         HeaderRow
         .NameContent()
         [
-            PropertyHandle->CreatePropertyNameWidget()
+             PropertyHandle->CreatePropertyNameWidget()
         ]
         .ValueContent()
         .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
         [
             SNew(STextBlock)
-            .Text(NSLOCTEXT("ActorComponentPicker", "ActorComponentPickerUnavailableDueToNoEditor", "Component picker unavailable outside of blueprints!"))
+            .Text(LOCTEXT("ActorComponentPickerUnavailableDueToNoEditor", "Component picker unavailable outside of blueprints!"))
             .Font(IDetailLayoutBuilder::GetDetailFont())
         ];
     }
-    else // Editor is available
+    else // editor is available
     {
         HeaderRow
         .NameContent()
@@ -43,16 +46,33 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
         .ValueContent()
         .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
         [
-            SAssignNew(ComponentListComboButton, SComboButton)
-            .ButtonStyle(FAppStyle::Get(), "PropertyEditor.AssetComboStyle")
-            .ForegroundColor(FAppStyle::GetColor("PropertyEditor.AssetName.ColorAndOpacity"))
-            .OnGetMenuContent(this, &FActorComponentPickerTypeCustomization::GetPopupContent)
-            .ContentPadding(2.0f)
-            .ButtonContent()
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .FillWidth(1.f)
             [
-                SNew(STextBlock)
-                .Text(this, &FActorComponentPickerTypeCustomization::GetCurrentValueComponentName)
-                .Font(IDetailLayoutBuilder::GetDetailFont())
+                SAssignNew(ComponentListComboButton, SComboButton)
+                .ButtonStyle(FAppStyle::Get(), "PropertyEditor.AssetComboStyle")
+                .ForegroundColor(FAppStyle::GetColor("PropertyEditor.AssetName.ColorAndOpacity"))
+                .OnGetMenuContent(this, &FActorComponentPickerTypeCustomization::BuildPopupContent)
+                .ContentPadding(2.0f)
+                .ButtonContent()
+                [
+                    SNew(STextBlock)
+                    .Text(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName)
+                    .Font(IDetailLayoutBuilder::GetDetailFont())
+                ]
+            ]
+            + SHorizontalBox::Slot()
+            .AutoWidth()
+            [
+                SNew(SPublicPropertyEditorButton)
+                .Text(LOCTEXT("ActorComponentPickerClearButtonText", "Clear"))
+                .Image(FAppStyle::GetBrush("Icons.X"))
+                .OnClickAction(FSimpleDelegate::CreateLambda([this]
+                {
+                    SetComponent(nullptr);
+                }))
+                .IsFocusable(false)
             ]
         ];
     }
@@ -66,7 +86,7 @@ void FActorComponentPickerTypeCustomization::CustomizeChildren(
     // no action needed here, but override is required
 }
 
-TSharedRef<SWidget> FActorComponentPickerTypeCustomization::GetPopupContent()
+TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
 {
     TArray<TSharedRef<IClassViewerFilter>> ClassFilters;
     if (Editor->GetImportedClassViewerFilter().IsValid())
@@ -75,12 +95,12 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::GetPopupContent()
     }
 
     SubobjectEditor = SAssignNew(SubobjectEditor, SSubobjectBlueprintEditor)
-        .ObjectContext(this, &FActorComponentPickerTypeCustomization::GetSubobjectEditorObjectContext)
-        .PreviewActor(this, &FActorComponentPickerTypeCustomization::GetPreviewActor)
+        .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext)
+        .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
         .AllowEditing(false)
         .HideComponentClassCombo(true)
-        .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::OnSelectionUpdated)
-        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::OnComponentDoubleClicked)
+        .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::HandleSelectionUpdated)
+        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked)
         .SubobjectClassListFilters(ClassFilters);
 
     constexpr float MinPopupWidth = 250.0f;
@@ -99,9 +119,9 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::GetPopupContent()
         ];
 }
 
-UActorComponent* FActorComponentPickerTypeCustomization::GetCurrentValueComponent() const
+UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentValueComponent(const TSharedPtr<IPropertyHandle>& PropHandle)
 {
-    switch (UObject* Value; ComponentPropHandle->GetValue(Value))
+    switch (UObject* Value; PropHandle->GetValue(Value))
     {
         case FPropertyAccess::Success:
             return Cast<UActorComponent>(Value);
@@ -110,39 +130,37 @@ UActorComponent* FActorComponentPickerTypeCustomization::GetCurrentValueComponen
     }
 }
 
-FText FActorComponentPickerTypeCustomization::GetCurrentValueComponentName() const
+FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
 {
-    const UActorComponent* Component = GetCurrentValueComponent();
+    const UActorComponent* Component = ExtractCurrentValueComponent(PropHandle);
     return Component ? FText::FromName(Component->GetFName()) : FText::FromString("None");
 }
 
-UObject* FActorComponentPickerTypeCustomization::GetSubobjectEditorObjectContext() const
+UObject* FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext() const
 {
     return Editor->GetSubobjectEditorObjectContext();
 }
 
-AActor* FActorComponentPickerTypeCustomization::GetPreviewActor() const
+AActor* FActorComponentPickerTypeCustomization::HandleGetPreviewActor() const
 {
     return Editor->GetPreviewActor();
 }
 
-void FActorComponentPickerTypeCustomization::OnSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
+void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
 {
-    UActorComponent* EditableComponent = GetComponentFromSubobjectNode(SelectedNodes[0]);
-    AActor* ActorCDO = FetchActorCDOForProperty(PropHandle);
-    SetComponent(ActorCDO, EditableComponent);
+    UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(SelectedNodes[0]);
+    SetComponent(EditableComponent);
 
     ComponentListComboButton->SetIsOpen(false);
 }
 
-void FActorComponentPickerTypeCustomization::OnComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
+void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node)
 {
-    UActorComponent* EditableComponent = GetComponentFromSubobjectNode(Node);
-    AActor* ActorCDO = FetchActorCDOForProperty(PropHandle);
-    SetComponent(ActorCDO, EditableComponent);
+    UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(Node);
+    SetComponent(EditableComponent);
 }
 
-UActorComponent* FActorComponentPickerTypeCustomization::GetComponentFromSubobjectNode(
+UActorComponent* FActorComponentPickerTypeCustomization::ExtractComponentFromSubobjectNode(
     const FSubobjectEditorTreeNodePtrType& SubobjectNodePtr)
 {
     if (!SubobjectNodePtr)
@@ -159,26 +177,21 @@ UActorComponent* FActorComponentPickerTypeCustomization::GetComponentFromSubobje
    return const_cast<UActorComponent*>(TmpComponent);
 }
 
-void FActorComponentPickerTypeCustomization::SetComponent(AActor* OwnerActorCDO, UActorComponent* Component) const
+void FActorComponentPickerTypeCustomization::SetComponent(UActorComponent* Component) const
 {
-    if (!ensure(OwnerActorCDO))
+    AActor* ActorCDO = FetchActorCDOForProperty(PropHandle);
+    if (!ActorCDO)
         return;
 
     // Actual transaction starts here
     const FScopedTransaction Transaction(FText::Format(
-        NSLOCTEXT("ActorComponentPicker", "SetActorComponentPickerComponentProperty", "Set {0}"),
+        LOCTEXT("SetActorComponentPickerComponentProperty", "Set {0}"),
         ComponentPropHandle->GetPropertyDisplayName()));
 
-    OwnerActorCDO->SetFlags(RF_Transactional);
-    OwnerActorCDO->Modify();
+    ActorCDO->SetFlags(RF_Transactional);
+    ActorCDO->Modify();
     
-    switch (ComponentPropHandle->SetValue(Component))
-    {
-        case FPropertyAccess::Fail:
-            UE_LOG(LogTemp, Error, TEXT("Setting component property failed!"))
-        default:
-            {}
-    }
+    ComponentPropHandle->SetValue(Component);
 }
 
 AActor* FActorComponentPickerTypeCustomization::FetchActorCDOForProperty(
@@ -214,14 +227,20 @@ FBlueprintEditor* FActorComponentPickerTypeCustomization::FetchBlueprintEditor(
     const AActor* EditedActor = FetchActorCDOForProperty(PropertyHandle);
     if (!IsValid(EditedActor))
         return nullptr;
+    
     const UClass* Class = EditedActor->GetClass();
     if (!IsValid(Class))
         return nullptr;
+    
     const UObject* Blueprint = Class->ClassGeneratedBy;
     if (!IsValid(Blueprint))
         return nullptr;
+    
     const TSharedPtr<IToolkit> Toolkit = FToolkitManager::Get().FindEditorForAsset(Blueprint);
     if (!Toolkit.IsValid())
         return nullptr;
+    
     return StaticCast<FBlueprintEditor*>(Toolkit.Get());
 }
+
+#undef LOCTEXT_NAMESPACE
