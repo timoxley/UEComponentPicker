@@ -40,7 +40,7 @@ Alternatively you can download the ZIP of this repo and place it in
 ## Development Status
 
 This plugin is currently in an experimental state. There's at least one crash case I know of,
-it may contain some bugs and lacks some quality of life features and polish. 
+some bugs and some missing quality of life features and polish. 
 It definitely wasn't battle-tested yet :)
 
 You can see all improvements I'd like to make in the GitHub issues tab, but feel free to open issues I didn't find.
@@ -53,7 +53,7 @@ Also, any general feedback and pull-requests are much appreciated!
 To configure a component picker in Blueprint, add a new `ComponentPicker` property to a component, 
 expose it to be editable within the owning actor, compile, then set the allowed class in the default value.
 
-[<p align="center"><img src="./Docs/BlueprintRetrieval.png" width="50%"/></p>](./Docs/BlueprintDefinition.png)
+[<p align="center"><img src="./Docs/BlueprintDefinition.png" width="50%"/></p>](./Docs/BlueprintDefinition.png)
 
 To configure a component picker in C++, add a new `FComponentPicker` property to a component, 
 expose it to be editable within the owning actor, then set the allowed class in the constructor.
@@ -81,7 +81,7 @@ class UMyComponent : public UActorComponent
 After having done the setup above, you can add the component to an actor of your choice,
 and pick another component on the same actor:
 
-[<p align="center"><img src="./Docs/BlueprintRetrieval.png" width="50%"/></p>](./Docs/Picking.png)
+[<p align="center"><img src="./Docs/Picking.png" width="50%"/></p>](./Docs/Picking.png)
 
 ### Retrieving a Component
 
