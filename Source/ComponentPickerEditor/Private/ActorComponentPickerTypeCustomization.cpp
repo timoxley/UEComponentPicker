@@ -1,6 +1,5 @@
 ﻿// Copyright 2024 Gregor Sönnichsen. All Rights Reserved.
 
-
 #include "ActorComponentPickerTypeCustomization.h"
 
 #include "ComponentPickerSCSEditorUICustomization.h"
@@ -9,6 +8,8 @@
 #include "PublicPropertyEditorButton.h"
 #include "SSubobjectBlueprintEditor.h"
 #include "SSubobjectEditor.h"
+#include "SubobjectDataBlueprintFunctionLibrary.h"
+#include "Styling/SlateIconFinder.h"
 #include "Toolkits/ToolkitManager.h"
 
 #define LOCTEXT_NAMESPACE "FComponentPickerTypeCustomization"
@@ -32,7 +33,99 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
     .ValueContent()
     .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
     [
-        SNew(SVerticalBox)
+        BuildComponentPicker()
+    ];
+}
+
+void FActorComponentPickerTypeCustomization::CustomizeChildren(
+    TSharedRef<IPropertyHandle> PropertyHandle,
+   IDetailChildrenBuilder& ChildBuilder,
+   IPropertyTypeCustomizationUtils& CustomizationUtils)
+{
+    // no action needed here, but override is required
+}
+
+TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
+{
+    RebuildClassFilters();
+    
+    SubobjectEditor = SAssignNew(SubobjectEditor, SSubobjectBlueprintEditor)
+        .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext)
+        .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
+        .AllowEditing(false)
+        .HideComponentClassCombo(false)
+        .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::HandleSelectionUpdated)
+        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked);
+
+    SubobjectEditor->SetUICustomization(FComponentPickerSCSEditorUICustomization::GetInstance());
+
+    constexpr float MinPopupWidth = 250.0f;
+    constexpr float MinPopupHeight = 200.0f;
+
+    return SNew(SBorder)
+        .BorderImage(FAppStyle::Get().GetBrush("Brushes.Secondary"))
+        .Padding(2.f, 6.f)
+        [
+            SNew(SBorder)
+            .BorderImage(FAppStyle::Get().GetBrush("Brushes.Recessed"))
+            .Padding(4.0f)
+            [
+                SNew(SBox)
+                .MinDesiredWidth(MinPopupWidth)
+                .MinDesiredHeight(MinPopupHeight)
+                [
+                    SubobjectEditor.ToSharedRef()
+                ]
+            ]
+        ];
+}
+
+void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
+{
+    FComponentPickerSCSEditorUICustomization::GetInstance()
+        ->SetComponentTypeFilter
+        (
+            ExtractAllowedComponentClass(AllowedClassPropHandle)
+        );
+}
+
+FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
+{
+    const UActorComponent* ComponentTemplate = ExtractCurrentlyPickedComponent(ComponentPropHandle);
+    if (!ComponentTemplate)
+    {
+        return FText::FromString("None");
+    }
+
+    if (auto* SubObjectDataSubsystem = USubobjectDataSubsystem::Get())
+    {
+        AActor* ActorCDO = FetchActorCDOForProperty(PropHandle);
+        
+        TArray<FSubobjectDataHandle> SubObjectDataArray;
+        SubObjectDataSubsystem->GatherSubobjectData(ActorCDO, SubObjectDataArray);
+        
+        for (FSubobjectDataHandle& Handle : SubObjectDataArray)
+        {
+            const FSubobjectData* SubObjectData = Handle.GetData();
+            if (SubObjectData->GetComponentTemplate() == ComponentTemplate)
+            {
+                return FText::FromString(SubObjectData->GetDisplayString(false));
+            }
+        }
+    }
+
+    return FText::FromString(ComponentTemplate->GetName());
+}
+
+const FSlateBrush* FActorComponentPickerTypeCustomization::HandleGetCurrentComponentIcon() const
+{
+    const UActorComponent* ComponentTemplate = ExtractCurrentlyPickedComponent(ComponentPropHandle);
+    return !ComponentTemplate ? nullptr : FSlateIconFinder::FindIconBrushForClass(ComponentTemplate->GetClass(), TEXT("SCS.Component"));
+}
+
+TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPicker()
+{
+    return SNew(SVerticalBox)
         // component picker
         + SVerticalBox::Slot()
         .AutoHeight()
@@ -48,12 +141,10 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
                 .ButtonStyle(FAppStyle::Get(), "PropertyEditor.AssetComboStyle")
                 .ForegroundColor(FAppStyle::GetColor("PropertyEditor.AssetName.ColorAndOpacity"))
                 .OnGetMenuContent(this, &FActorComponentPickerTypeCustomization::BuildPopupContent)
-                .ContentPadding(2.0f)
+                .ContentPadding(FMargin(3.0f, 3.0f, 2.0f, 1.0f))
                 .ButtonContent()
                 [
-                    SNew(STextBlock)
-                    .Text(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName)
-                    .Font(IDetailLayoutBuilder::GetDetailFont())
+                    BuildComponentPickerLabel()
                 ]
             ]
             + SHorizontalBox::Slot()
@@ -87,88 +178,47 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
             [
                 AllowedClassPropHandle->CreatePropertyValueWidget()
             ]
-        ]
-    ];
-}
-
-void FActorComponentPickerTypeCustomization::CustomizeChildren(
-    TSharedRef<IPropertyHandle> PropertyHandle,
-   IDetailChildrenBuilder& ChildBuilder,
-   IPropertyTypeCustomizationUtils& CustomizationUtils)
-{
-    // no action needed here, but override is required
-}
-
-TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
-{
-    RebuildClassFilters();
-    
-    SubobjectEditor = SAssignNew(SubobjectEditor, SSubobjectBlueprintEditor)
-        .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext)
-        .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
-        .AllowEditing(false)
-        .HideComponentClassCombo(false)
-        .OnSelectionUpdated(this, &FActorComponentPickerTypeCustomization::HandleSelectionUpdated)
-        .OnItemDoubleClicked(this, &FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked);
-
-    SubobjectEditor->SetUICustomization(FComponentPickerSCSEditorUICustomization::GetInstance());
-
-    constexpr float MinPopupWidth = 250.0f;
-    constexpr float MinPopupHeight = 200.0f;
-
-    return SNew(SBorder)
-        .BorderImage(FAppStyle::Get().GetBrush("Brushes.Secondary"))
-        .Padding(2.f, 6.f)
-        [
-            SNew(SBorder)
-            .BorderImage(FAppStyle::Get().GetBrush("Brushes.Recessed"))
-            .Padding(4.0f)
-            [
-                SNew(SBox)
-                .MinDesiredWidth(MinPopupWidth)
-                .MinDesiredHeight(MinPopupHeight)
-                [
-                    SubobjectEditor.ToSharedRef()
-                ]
-            ]
         ];
 }
 
-void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
+TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildComponentPickerLabel()
 {
-    FComponentPickerSCSEditorUICustomization::GetInstance()->SetComponentTypeFilter(ExtractAllowedComponentClass(AllowedClassPropHandle));
+    return SNew(SHorizontalBox)
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        [
+            SNew(SSpacer)
+            .Size(FVector2D(3.f, 0.f))
+        ]
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        [
+            SNew(SImage)
+            .Image(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentIcon)
+        ]
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        [
+            SNew(SSpacer)
+            .Size(FVector2D(5.f, 0.f))
+        ]
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        [
+            SNew(STextBlock)
+            .Text(this, &FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName)
+            .Font(IDetailLayoutBuilder::GetDetailFont())
+        ]
+        + SHorizontalBox::Slot()
+        .FillWidth(1.f)
+        [
+            SNew(SSpacer)
+            .Size(FVector2D(1.f, 0.f))
+        ];
 }
 
-FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
-{
-    const UActorComponent* Component = ExtractCurrentlyPickedComponent(ComponentPropHandle);
-    if (!Component)
-    {
-        return FText::FromString("None");
-    }
-
-    return FText::FromString(Component->GetName());
-
-    //todo: check FSubobjectData::GetDisplayString to get the actually displayed string
-    
-    // const UClass* ComponentClass = Component->GetClass();
-    //
-    // // try get display name
-    // if (ComponentClass->HasMetaData(TEXT("DisplayName")))
-    // {
-    //     return FText::FromString(ComponentClass->GetMetaData(TEXT("DisplayName")));
-    // }
-    //
-    // // get default display name text, adjusted for blueprint classes
-    // FString DisplayName = ComponentClass->GetDisplayNameText().ToString();
-    // if (!ComponentClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
-    // {
-    //     DisplayName.RemoveFromEnd(TEXT("Component"), ESearchCase::IgnoreCase);
-    // }
-    // return FText::FromString(DisplayName);
-}
-
-UObject* FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext() const
+UObject* FActorComponentPickerTypeCustomization::HandleGetSubObjectEditorObjectContext() const
 {
     return BlueprintToolkit->GetSubobjectEditorObjectContext();
 }

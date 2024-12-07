@@ -40,6 +40,15 @@ protected:
 
     /** Get the to be displayed name of the selected component. */
     FText HandleGetCurrentComponentName() const;
+
+    /** Get the to be displayed icon of the selected component. */
+    const FSlateBrush* HandleGetCurrentComponentIcon() const;
+    
+    /** Build the component picker widget. */
+    TSharedRef<SWidget> BuildComponentPicker();
+    
+    /** Build the content of the component combo box label. */
+    TSharedRef<SWidget> BuildComponentPickerLabel();
     
     /** Build the content of the component selector pop-up. */
     TSharedRef<SWidget> BuildPopupContent();
@@ -50,7 +59,7 @@ protected:
     //////////////////////////////
     /// BP component tree view delegate handlers
 
-    UObject* HandleGetSubobjectEditorObjectContext() const;
+    UObject* HandleGetSubObjectEditorObjectContext() const;
     AActor* HandleGetPreviewActor() const;
     void HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes);
     void HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node);
