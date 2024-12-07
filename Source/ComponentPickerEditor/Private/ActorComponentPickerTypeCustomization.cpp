@@ -142,7 +142,30 @@ void FActorComponentPickerTypeCustomization::RebuildClassFilters() const
 FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
 {
     const UActorComponent* Component = ExtractCurrentlyPickedComponent(ComponentPropHandle);
-    return Component ? FText::FromName(Component->GetFName()) : FText::FromString("None");
+    if (!Component)
+    {
+        return FText::FromString("None");
+    }
+
+    return FText::FromString(Component->GetName());
+
+    //todo: check FSubobjectData::GetDisplayString to get the actually displayed string
+    
+    // const UClass* ComponentClass = Component->GetClass();
+    //
+    // // try get display name
+    // if (ComponentClass->HasMetaData(TEXT("DisplayName")))
+    // {
+    //     return FText::FromString(ComponentClass->GetMetaData(TEXT("DisplayName")));
+    // }
+    //
+    // // get default display name text, adjusted for blueprint classes
+    // FString DisplayName = ComponentClass->GetDisplayNameText().ToString();
+    // if (!ComponentClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+    // {
+    //     DisplayName.RemoveFromEnd(TEXT("Component"), ESearchCase::IgnoreCase);
+    // }
+    // return FText::FromString(DisplayName);
 }
 
 UObject* FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext() const
