@@ -3,16 +3,19 @@
 
 #include "ActorComponentPickerTypeCustomization.h"
 
-#include "ActorComponentPicker.h"
+#include "ComponentClassFilter.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "IDetailChildrenBuilder.h"
 #include "PublicPropertyEditorButton.h"
 #include "SSubobjectBlueprintEditor.h"
 #include "SSubobjectEditor.h"
 #include "Toolkits/ToolkitManager.h"
 
 #define LOCTEXT_NAMESPACE "FComponentPickerTypeCustomization"
+
+FActorComponentPickerTypeCustomization::FActorComponentPickerTypeCustomization()
+    : AllowedClassFromPropertyFilter(MakeShareable(new FComponentClassFilter))
+{}
 
 void FActorComponentPickerTypeCustomization::CustomizeHeader(
     TSharedRef<IPropertyHandle> PropertyHandle,
@@ -23,30 +26,25 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
     ComponentPropHandle = PropertyHandle->GetChildHandle("Component");
     AllowedClassPropHandle = PropertyHandle->GetChildHandle("AllowedClass");
 
-    Editor = FetchBlueprintEditor(PropertyHandle);
-    if (!Editor) // within some non-blueprint actor toolkit
-    {
-        HeaderRow
-        .NameContent()
-        [
-             PropertyHandle->CreatePropertyNameWidget()
-        ]
-        .ValueContent()
-        [
-            AllowedClassPropHandle->CreatePropertyValueWidget()
-        ];
-    }
-    else // within blueprint actor toolkit
-    {
-        HeaderRow
-        .NameContent()
-        [
-            PropertyHandle->CreatePropertyNameWidget()
-        ]
-        .ValueContent()
-        .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
+    BlueprintToolkit = FetchBlueprintEditor(PropertyHandle);
+
+    HeaderRow
+    .NameContent()
+    [
+        PropertyHandle->CreatePropertyNameWidget()
+    ]
+    .ValueContent()
+    .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
+    [
+        SNew(SVerticalBox)
+        // component picker
+        + SVerticalBox::Slot()
+        .AutoHeight()
         [
             SNew(SHorizontalBox)
+            .IsEnabled_Lambda([this](){ return BlueprintToolkit != nullptr; })
+            .ToolTipText(LOCTEXT("ComponentPickerToolTipText",
+                "Pick the component to be accessed later on. Only available in the blueprint actor editor."))
             + SHorizontalBox::Slot()
             .FillWidth(1.f)
             [
@@ -74,8 +72,27 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
                 }))
                 .IsFocusable(false)
             ]
-        ];
-    }
+        ]
+        // spacer
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SSpacer)
+            .Size(FVector2D(0.f, 5.f))
+        ]
+        // allowed class selection
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SBox)
+            .IsEnabled_Lambda([this](){ return BlueprintToolkit == nullptr; })
+            .ToolTipText(LOCTEXT("AllowedComponentToolTipText",
+                "Choose the component class that is allowed to be picked. Only available in the blueprint component editor."))
+            [
+                AllowedClassPropHandle->CreatePropertyValueWidget()
+            ]
+        ]
+    ];
 }
 
 void FActorComponentPickerTypeCustomization::CustomizeChildren(
@@ -88,12 +105,8 @@ void FActorComponentPickerTypeCustomization::CustomizeChildren(
 
 TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
 {
-    TArray<TSharedRef<IClassViewerFilter>> ClassFilters;
-    if (Editor->GetImportedClassViewerFilter().IsValid())
-    {
-        ClassFilters.Add(Editor->GetImportedClassViewerFilter().ToSharedRef());
-    }
-
+    RebuildClassFilters();
+    
     SubobjectEditor = SAssignNew(SubobjectEditor, SSubobjectBlueprintEditor)
         .ObjectContext(this, &FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext)
         .PreviewActor(this, &FActorComponentPickerTypeCustomization::HandleGetPreviewActor)
@@ -119,31 +132,38 @@ TSharedRef<SWidget> FActorComponentPickerTypeCustomization::BuildPopupContent()
         ];
 }
 
-UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentValueComponent(const TSharedPtr<IPropertyHandle>& PropHandle)
+void FActorComponentPickerTypeCustomization::RebuildClassFilters()
 {
-    switch (UObject* Value; PropHandle->GetValue(Value))
+    if (BlueprintToolkit == nullptr)
+        return;
+
+    ClassFilters.Empty();
+
+    // add class filter from blueprint toolkit
+    if (BlueprintToolkit->GetImportedClassViewerFilter().IsValid())
     {
-        case FPropertyAccess::Success:
-            return Cast<UActorComponent>(Value);
-        default:
-            return nullptr;
+        ClassFilters.Add(BlueprintToolkit->GetImportedClassViewerFilter().ToSharedRef());
     }
+
+    // add class filter from allowed class property
+    AllowedClassFromPropertyFilter->AllowedParentClasses = { ExtractAllowedComponentClass(AllowedClassPropHandle) };
+    ClassFilters.Add(AllowedClassFromPropertyFilter);
 }
 
 FText FActorComponentPickerTypeCustomization::HandleGetCurrentComponentName() const
 {
-    const UActorComponent* Component = ExtractCurrentValueComponent(ComponentPropHandle);
+    const UActorComponent* Component = ExtractCurrentlyPickedComponent(ComponentPropHandle);
     return Component ? FText::FromName(Component->GetFName()) : FText::FromString("None");
 }
 
 UObject* FActorComponentPickerTypeCustomization::HandleGetSubobjectEditorObjectContext() const
 {
-    return Editor->GetSubobjectEditorObjectContext();
+    return BlueprintToolkit->GetSubobjectEditorObjectContext();
 }
 
 AActor* FActorComponentPickerTypeCustomization::HandleGetPreviewActor() const
 {
-    return Editor->GetPreviewActor();
+    return BlueprintToolkit->GetPreviewActor();
 }
 
 void FActorComponentPickerTypeCustomization::HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes)
@@ -158,6 +178,29 @@ void FActorComponentPickerTypeCustomization::HandleComponentDoubleClicked(TShare
 {
     UActorComponent* EditableComponent = ExtractComponentFromSubobjectNode(Node);
     SetComponent(EditableComponent);
+}
+
+UClass* FActorComponentPickerTypeCustomization::ExtractAllowedComponentClass(
+    const TSharedPtr<IPropertyHandle>& PropHandle)
+{
+    switch (UObject* Value; PropHandle->GetValue(Value))
+    {
+    case FPropertyAccess::Success:
+        return Cast<UClass>(Value);
+    default:
+        return nullptr;
+    }
+}
+
+UActorComponent* FActorComponentPickerTypeCustomization::ExtractCurrentlyPickedComponent(const TSharedPtr<IPropertyHandle>& PropHandle)
+{
+    switch (UObject* Value; PropHandle->GetValue(Value))
+    {
+    case FPropertyAccess::Success:
+        return Cast<UActorComponent>(Value);
+    default:
+        return nullptr;
+    }
 }
 
 UActorComponent* FActorComponentPickerTypeCustomization::ExtractComponentFromSubobjectNode(

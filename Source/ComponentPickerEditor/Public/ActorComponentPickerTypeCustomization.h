@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BlueprintEditor.h"
+#include "ComponentClassFilter.h"
 #include "SSubobjectEditor.h"
 
 /**
@@ -12,6 +13,8 @@
 class FActorComponentPickerTypeCustomization final : public IPropertyTypeCustomization
 {
 public:
+    FActorComponentPickerTypeCustomization();
+    
     /** Makes a new instance of this detail layout class for a specific detail view requesting it. */
     static TSharedRef<IPropertyTypeCustomization> MakeInstance()
     {
@@ -35,22 +38,34 @@ protected:
     /** Set the component selected by the picker. */
     void SetComponent(UActorComponent* Component) const;
 
-    /** Build the content of the component selector pop-up. */
-    TSharedRef<SWidget> BuildPopupContent();
+    //////////////////////////////
+    /// Widget Builders
 
     /** Get the to be displayed name of the selected component. */
     FText HandleGetCurrentComponentName() const;
+    
+    /** Build the content of the component selector pop-up. */
+    TSharedRef<SWidget> BuildPopupContent();
 
-    // ----------------------------------------------
-    // BP component tree view delegate handlers
+    /** Fill the @ClassFilters array. */
+    void RebuildClassFilters();
+
+    //////////////////////////////
+    /// BP component tree view delegate handlers
+
     UObject* HandleGetSubobjectEditorObjectContext() const;
     AActor* HandleGetPreviewActor() const;
     void HandleSelectionUpdated(const TArray<TSharedPtr<FSubobjectEditorTreeNode>>& SelectedNodes);
     void HandleComponentDoubleClicked(TSharedPtr<FSubobjectEditorTreeNode> Node);
-    // ----------------------------------------------
+
+    //////////////////////////////
+    /// Property Handle Extractors
     
+    /** Tries to extract a component class value from the given property handle. */
+    static UClass* ExtractAllowedComponentClass(const TSharedPtr<IPropertyHandle>& PropHandle);
+
     /** Tries to extract a component value from the given property handle. */
-    static UActorComponent* ExtractCurrentValueComponent(const TSharedPtr<IPropertyHandle>& PropHandle);
+    static UActorComponent* ExtractCurrentlyPickedComponent(const TSharedPtr<IPropertyHandle>& PropHandle);
 
     /** Tries to extract the component CDO from the subobject editor node. */
     static UActorComponent* ExtractComponentFromSubobjectNode(const FSubobjectEditorTreeNodePtrType& SubobjectNodePtr);
@@ -62,17 +77,22 @@ protected:
     static FBlueprintEditor* FetchBlueprintEditor(const TSharedPtr<IPropertyHandle>& PropertyHandle);
 
 private:
-    FBlueprintEditor* Editor = nullptr;
-    
+    // owning toolkit editor
+    FBlueprintEditor* BlueprintToolkit = nullptr;
+
+    // component picker filters
+    TArray<TSharedRef<IClassViewerFilter>> ClassFilters;
+    TSharedRef<FComponentClassFilter> AllowedClassFromPropertyFilter;
+
+    // widgets
     TSharedPtr<SBox> AllowedClassBox;
     TSharedPtr<SComboButton> ComponentListComboButton;
     TSharedPtr<SListView<TWeakObjectPtr<UActorComponent>>> ComponentListView;
     TSharedPtr<SSearchBox> SearchBox;
     TSharedPtr<SSubobjectEditor> SubobjectEditor;
 
+    // property handles
     TSharedPtr<IPropertyHandle> PropHandle;
     TSharedPtr<IPropertyHandle> AllowedClassPropHandle;
     TSharedPtr<IPropertyHandle> ComponentPropHandle;
-    
-    TArray<TWeakObjectPtr<UActorComponent>> ReferenceableComponents;
 };
