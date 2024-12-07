@@ -1,0 +1,28 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ComponentPicker",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Gregor Sönnichsen",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ComponentPicker",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ComponentPickerEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
