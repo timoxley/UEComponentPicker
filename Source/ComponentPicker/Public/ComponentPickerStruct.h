@@ -23,15 +23,31 @@ struct COMPONENTPICKER_API FComponentPicker
 public:
 	/** Get the currently selected component pre-casted. */
 	template<typename TComponentClass>
-	TComponentClass* Get() const
+	TComponentClass* Get(const UActorComponent* ComponentContext) const
 	{
-		return Cast<TComponentClass*>(Component);
+		return Cast<TComponentClass*>(Get(ComponentContext));
 	}
 
 	/** Get the currently selected component. */
-	FORCEINLINE UActorComponent* Get() const
+	UActorComponent* Get(const UActorComponent* ComponentContext) const
 	{
-		return Component;
+		if (!Instance.IsExplicitlyNull())
+			return Instance.Get();
+		
+		FString ComponentStr = Component->GetFName().ToString();
+		ComponentStr.RemoveFromEnd("_GEN_VARIABLE");
+		const FName ComponentName = FName(ComponentStr);
+		
+		const TSet<UActorComponent*>& OwnedComponents = ComponentContext->GetOwner()->GetComponents();
+		for (auto* ComponentInstance : OwnedComponents)
+		{
+			if (ComponentInstance->GetName() == ComponentName)
+			{
+				const_cast<FComponentPicker*>(this)->Instance = ComponentInstance;
+				return ComponentInstance;
+			}
+		}
+		return nullptr;
 	}
 
 	FORCEINLINE void SetAllowedClass(const TSubclassOf<UActorComponent>& NewAllowedClass)
@@ -47,4 +63,6 @@ protected:
     /** The currently selected component. */
     UPROPERTY(EditAnywhere, meta=(NoEditInline), Category=ComponentPicker)
     UActorComponent* Component = nullptr;
+
+	TWeakObjectPtr<UActorComponent> Instance = nullptr;
 };

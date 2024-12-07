@@ -20,9 +20,10 @@ public:
     /** Get the component selected in a @FComponentPicker. */
     UFUNCTION(
         BlueprintPure,
-        meta=(DisplayName="Get (Component Picker)", ScriptMethod="GetPickedComponent", DeterminesOutputType="ComponentClass"),
+        meta=(DisplayName="Get (Component Picker)", ScriptMethod="GetPickedComponent", DeterminesOutputType="ComponentClass", DefaultToSelf="ComponentContext"),
         Category="Component Picker")
     static COMPONENTPICKER_API UActorComponent* GetPickedComponent(
         const FComponentPicker& Target,
+        const UActorComponent* ComponentContext,
         const TSubclassOf<UActorComponent> ComponentClass);
 };
