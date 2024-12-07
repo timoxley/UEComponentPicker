@@ -14,12 +14,17 @@ method that has to be manually called to inject the dependency.
 
 ## Table Of Contents
 
+* [Supported Engine Version](#supported-engine-version)
 * [Installation](#installation)
 * [Development Status](#development-status)
 * [Usage](#usage)
     * [Picker Property Configuration](#picker-property-configuration)
     * [Picking a Component](#picking-a-component)
     * [Retrieving a Component](#retrieving-a-component)
+
+## Supported Engine Version
+
+The plugin was developed for Unreal Engine 5.5+, though it should work for all 5.X versions.
 
 ## Installation
 
@@ -39,11 +44,12 @@ Alternatively you can download the ZIP of this repo and place it in
 
 ## Development Status
 
-This plugin is currently in an experimental state. There's at least one crash case I know of,
-some bugs and some missing quality of life features and polish. 
+This plugin is currently in an experimental state. There are
+some bugs, missing quality of life features and polish. 
 It definitely wasn't battle-tested yet :)
 
-You can see all improvements I'd like to make in the GitHub issues tab, but feel free to open issues I didn't find.
+You can see all improvements I'd like to make in the GitHub issues tab, 
+feel free to open new issues.
 Also, any general feedback and pull-requests are much appreciated!
 
 ## Usage
