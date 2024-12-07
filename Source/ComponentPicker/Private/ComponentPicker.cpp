@@ -1,4 +1,5 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright 2024 Gregor Sönnichsen.
+// Released under the MIT license https://opensource.org/license/MIT/
 
 #include "ComponentPicker.h"
 
