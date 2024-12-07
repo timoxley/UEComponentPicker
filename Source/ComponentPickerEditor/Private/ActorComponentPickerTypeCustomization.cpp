@@ -19,9 +19,23 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
     ComponentPropHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FActorComponentPicker, Component));
 
     if (Editor = FetchBlueprintEditor(PropertyHandle); !Editor)
-        return;
-
-    HeaderRow
+    {
+        HeaderRow
+        .NameContent()
+        [
+            PropertyHandle->CreatePropertyNameWidget()
+        ]
+        .ValueContent()
+        .MaxDesiredWidth(FDetailWidgetRow::DefaultValueMaxWidth * 2)
+        [
+            SNew(STextBlock)
+            .Text(NSLOCTEXT("ActorComponentPicker", "ActorComponentPickerUnavailableDueToNoEditor", "Component picker unavailable outside of blueprints!"))
+            .Font(IDetailLayoutBuilder::GetDetailFont())
+        ];
+    }
+    else // Editor is available
+    {
+        HeaderRow
         .NameContent()
         [
             PropertyHandle->CreatePropertyNameWidget()
@@ -41,6 +55,7 @@ void FActorComponentPickerTypeCustomization::CustomizeHeader(
                 .Font(IDetailLayoutBuilder::GetDetailFont())
             ]
         ];
+    }
 }
 
 void FActorComponentPickerTypeCustomization::CustomizeChildren(
