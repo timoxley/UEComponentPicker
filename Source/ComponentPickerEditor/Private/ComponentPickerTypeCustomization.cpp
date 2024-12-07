@@ -172,14 +172,22 @@ TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildComponentPicker()
         + SVerticalBox::Slot()
         .AutoHeight()
         [
-            SNew(SBox)
+            BuildComponentPickerAllowedClassPicker()
+        ];
+}
+
+TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildComponentPickerAllowedClassPicker() const
+{
+    if (AllowedClassPropHandle == nullptr)
+        return SNew(SBox);
+    
+    return SNew(SBox)
             .IsEnabled_Lambda([this](){ return BlueprintToolkit == nullptr; })
             .ToolTipText(LOCTEXT("AllowedComponentToolTipText",
                 "Choose the component class that is allowed to be picked. Only available in the blueprint component editor."))
             [
                 AllowedClassPropHandle->CreatePropertyValueWidget()
-            ]
-        ];
+            ];
 }
 
 TSharedRef<SWidget> FComponentPickerTypeCustomization::BuildComponentPickerLabel()

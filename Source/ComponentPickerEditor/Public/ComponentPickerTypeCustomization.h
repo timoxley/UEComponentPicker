@@ -47,6 +47,9 @@ protected:
     /** Build the component picker widget. */
     TSharedRef<SWidget> BuildComponentPicker();
     
+    /** Build the allowed class picker widget. */
+    TSharedRef<SWidget> BuildComponentPickerAllowedClassPicker() const;
+    
     /** Build the content of the component combo box label. */
     TSharedRef<SWidget> BuildComponentPickerLabel();
     
