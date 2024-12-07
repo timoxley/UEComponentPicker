@@ -4,10 +4,10 @@
 #include "ComponentPickerFunctionLibrary.h"
 
 UActorComponent* UComponentPickerFunctionLibrary::GetPickedComponent(
-    const FComponentPicker& Target,
-    const UActorComponent* ComponentContext,
+    const UActorComponent* Target,
+    const FComponentPicker& Picker,
     const TSubclassOf<UActorComponent> ComponentClass)
 {
     (void) ComponentClass;
-    return Target.Get(ComponentContext);
+    return Picker.Get(Target);
 }
