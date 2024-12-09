@@ -50,6 +50,11 @@ public:
 		return nullptr;
 	}
 
+	FORCEINLINE void Pick(UActorComponent* PickedComponent)
+	{
+		Component = PickedComponent;
+	}
+
 	FORCEINLINE void SetAllowedClass(const TSubclassOf<UActorComponent>& NewAllowedClass)
 	{
 		AllowedClass = NewAllowedClass;

@@ -89,6 +89,25 @@ and pick another component on the same actor:
 
 [<p align="center"><img src="./Docs/Picking.png" width="50%"/></p>](./Docs/Picking.png)
 
+In C++:
+
+```C++
+class AMyActor : public AActor
+{
+    GENERATED_BODY()
+    
+    UMyComponent()
+    {
+        MyComp->MovementComp.Pick(MoverComponent);
+    }
+
+    ...
+    UPROPERTY()
+    UMyComponent* MyComp;
+    ...
+}
+```
+
 ### Retrieving a Component
 
 To retrieve a picked component in Blueprint, you can call `Get (Component Picker)` on the property,
