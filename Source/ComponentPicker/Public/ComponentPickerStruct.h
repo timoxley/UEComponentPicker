@@ -25,7 +25,7 @@ public:
 	template<typename TComponentClass>
 	TComponentClass* Get(const UActorComponent* ComponentContext) const
 	{
-		return Cast<TComponentClass*>(Get(ComponentContext));
+		return Cast<TComponentClass>(Get(ComponentContext));
 	}
 
 	/** Get the currently selected component. */
