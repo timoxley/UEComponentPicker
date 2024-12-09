@@ -94,14 +94,14 @@ and pick another component on the same actor:
 To retrieve a picked component in Blueprint, you can call `Get (Component Picker)` on the property,
 and specify the component type that should be returned. The function will return null, if casting fails.
 
-[<p align="center"><img src="./Docs/BlueprintRetrieval.png" width="50%"/></p>](./Docs/BlueprintRetrieval.png)
+[<p align="center"><img src="./Docs/BlueprintRetrieve.png" width="50%"/></p>](./Docs/BlueprintRetrieve.png)
 
 To retrieve a picked component in C++, you can call `Get()` either with its default, `UActorComponent` 
 returning version, or its templated variant.
 ```C++
 void UMyComponent::SomeFunc()
 {
-    UActorComponent* AsActorComp = MovementComp.Get();
-    auto* AsMovementComp = MovementComp.Get<UCharacterMovementComponent>();
+    UActorComponent* AsActorComp = MovementComp.Get(this);
+    auto* AsMovementComp = MovementComp.Get<UCharacterMovementComponent>(this);
 }
 ```
