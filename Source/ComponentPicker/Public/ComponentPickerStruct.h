@@ -4,7 +4,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
+
+#include "GameFramework/Actor.h"
+
 #include "ComponentPickerStruct.generated.h"
 
 /**
@@ -33,7 +35,8 @@ public:
 	{
 		if (!Instance.IsExplicitlyNull())
 			return Instance.Get();
-		
+		if (!Component)
+			return nullptr;
 		FString ComponentStr = Component->GetFName().ToString();
 		ComponentStr.RemoveFromEnd("_GEN_VARIABLE");
 		const FName ComponentName = FName(ComponentStr);
@@ -47,7 +50,7 @@ public:
 				return ComponentInstance;
 			}
 		}
-		return nullptr;
+		return Component;
 	}
 
 	FORCEINLINE void Pick(UActorComponent* PickedComponent)
@@ -60,7 +63,6 @@ public:
 		AllowedClass = NewAllowedClass;
 	}
 
-protected:
 	/** Allowed component class. */
 	UPROPERTY(EditDefaultsOnly, Category=ComponentPicker)
 	TSubclassOf<UActorComponent> AllowedClass = UActorComponent::StaticClass();
